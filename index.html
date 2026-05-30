@@ -1,429 +1,143 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Europe Family Trip Picker</title>
-  <meta name="description" content="Interactive family vacation city picker powered by Google Sheets." />
-  <style>
-    :root{
-      --bg:#f6f7fb; --panel:#ffffff; --text:#111827; --muted:#6b7280; --line:#e5e7eb;
-      --brand:#2563eb; --brand2:#0f766e; --soft:#eef2ff; --good:#16a34a; --bad:#dc2626;
-      --shadow:0 12px 35px rgba(15,23,42,.08); --radius:20px;
-    }
-    *{box-sizing:border-box}
-    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
-    header{background:linear-gradient(135deg,#1d4ed8,#0f766e);color:white;padding:34px 18px 28px}
-    .wrap{max-width:1220px;margin:auto;padding:18px}
-    h1{font-size:clamp(30px,5vw,54px);line-height:1.02;margin:0 0 10px}
-    h2{margin:0 0 12px;font-size:22px}
-    p{line-height:1.5}
-    header p{max-width:850px;margin:0;opacity:.92}
-    .topbar{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px}
-    .badge{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:8px 12px;font-size:13px}
-    .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin:18px 0}
-    .grid{display:grid;gap:14px}
-    .settings{grid-template-columns:minmax(260px,1fr) 130px 150px 150px}
-    .filters{grid-template-columns:1.4fr repeat(4,minmax(130px,1fr))}
-    label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
-    input,select,textarea{width:100%;border:1px solid var(--line);border-radius:12px;padding:11px 12px;background:white;color:var(--text);font:inherit}
-    button{border:0;border-radius:12px;padding:11px 14px;background:var(--brand);color:white;font-weight:800;cursor:pointer}
-    button.secondary{background:#111827}
-    button.ghost{background:#f3f4f6;color:#111827}
-    button.small{padding:8px 10px;font-size:13px}
-    .status{font-size:13px;color:var(--muted);margin-top:10px}
-    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}
-    .tab{background:white;color:#111827;border:1px solid var(--line)}
-    .tab.active{background:#111827;color:white}
-    .cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
-    .card{background:white;border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;min-height:300px}
-    .cardHero{height:74px;background:linear-gradient(135deg,rgba(37,99,235,.92),rgba(15,118,110,.85));display:flex;align-items:end;padding:14px;color:white}
-    .cardHero h3{margin:0;font-size:22px}
-    .country{font-size:13px;opacity:.88;margin-top:2px}
-    .cardBody{padding:15px;display:flex;flex-direction:column;gap:12px;flex:1}
-    .scoreRow{display:flex;align-items:center;justify-content:space-between;gap:12px}
-    .score{font-size:28px;font-weight:900;color:var(--brand)}
-    .chips{display:flex;flex-wrap:wrap;gap:6px}
-    .chip{background:#f3f4f6;color:#374151;border-radius:999px;padding:5px 8px;font-size:12px}
-    .chip.good{background:#dcfce7;color:#166534}
-    .chip.warn{background:#fef3c7;color:#92400e}
-    .muted{color:var(--muted)}
-    .cardActions{display:flex;gap:8px;margin-top:auto}
-    .cardActions button{flex:1}
-    .detailLayout{display:grid;grid-template-columns:320px 1fr;gap:16px}
-    .detailAside{background:white;border:1px solid var(--line);border-radius:20px;padding:16px;box-shadow:var(--shadow);height:max-content}
-    .detailMain{background:white;border:1px solid var(--line);border-radius:20px;padding:16px;box-shadow:var(--shadow)}
-    .factorGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-    .factor{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fbfdff}
-    .factorName{font-size:12px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px}
-    .factorValue{white-space:pre-wrap}
-    table{width:100%;border-collapse:separate;border-spacing:0}
-    th,td{border-bottom:1px solid var(--line);padding:11px 10px;text-align:left;vertical-align:top;font-size:14px}
-    th{position:sticky;top:0;background:white;z-index:1;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
-    .compareWrap{overflow:auto;background:white;border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}
-    .hidden{display:none!important}
-    .columnPicker{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-    .check{display:flex;align-items:center;gap:6px;background:#f9fafb;border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:13px}
-    .check input{width:auto}
-    .empty{padding:34px;text-align:center;color:var(--muted)}
-    .footer{color:var(--muted);font-size:13px;margin:30px 0}
-    code{background:#f3f4f6;border-radius:6px;padding:2px 5px}
-    @media(max-width:980px){
-      .cards{grid-template-columns:repeat(2,minmax(0,1fr))}
-      .settings,.filters{grid-template-columns:1fr 1fr}
-      .detailLayout{grid-template-columns:1fr}
-    }
-    @media(max-width:650px){
-      .cards,.settings,.filters,.factorGrid{grid-template-columns:1fr}
-      .topbar{gap:8px}
-    }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Europe Family Trip Picker</title>
+<style>
+:root{--bg:#f6f7fb;--panel:#fff;--text:#111827;--muted:#6b7280;--line:#e5e7eb;--brand:#2563eb;--brand2:#0f766e;--shadow:0 12px 35px rgba(15,23,42,.08);--radius:20px}
+*{box-sizing:border-box} body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+header{background:linear-gradient(135deg,#1d4ed8,#0f766e);color:white;padding:34px 18px 28px} .wrap{max-width:1240px;margin:auto;padding:18px}
+h1{font-size:clamp(30px,5vw,54px);line-height:1.02;margin:0 0 10px} h2{margin:0 0 12px;font-size:22px} h3{margin:0}
+p{line-height:1.5} header p{max-width:850px;margin:0;opacity:.92}
+.topbar{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px} .badge{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:8px 12px;font-size:13px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin:18px 0}
+.grid{display:grid;gap:14px} .filters{grid-template-columns:1.4fr repeat(4,minmax(130px,1fr))} .settings{grid-template-columns:minmax(260px,1fr) 130px 150px 150px}
+label{display:block;font-size:12px;font-weight:800;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
+input,select,textarea{width:100%;border:1px solid var(--line);border-radius:12px;padding:11px 12px;background:white;color:var(--text);font:inherit}
+button{border:0;border-radius:12px;padding:11px 14px;background:var(--brand);color:white;font-weight:800;cursor:pointer} button.secondary{background:#111827} button.ghost{background:#f3f4f6;color:#111827} button.small{padding:8px 10px;font-size:13px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0} .tab{background:white;color:#111827;border:1px solid var(--line)} .tab.active{background:#111827;color:white}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px} .card{background:white;border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;min-height:390px}
+.cardImg{height:170px;background:#dbeafe;position:relative;overflow:hidden} .cardImg img{width:100%;height:100%;object-fit:cover;display:block} .cardImg:after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.05),rgba(0,0,0,.45))}
+.cardTitle{position:absolute;left:14px;right:14px;bottom:12px;color:white;z-index:2;text-shadow:0 2px 8px rgba(0,0,0,.35)} .cardTitle h3{font-size:24px} .country{font-size:13px;opacity:.92;margin-top:2px}
+.cardBody{padding:15px;display:flex;flex-direction:column;gap:12px;flex:1} .scoreRow{display:flex;align-items:center;justify-content:space-between;gap:12px} .score{font-size:28px;font-weight:900;color:var(--brand)} .muted{color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px} .chip{background:#f3f4f6;color:#374151;border-radius:999px;padding:5px 8px;font-size:12px} .chip.good{background:#dcfce7;color:#166534} .chip.warn{background:#fef3c7;color:#92400e}
+.cardActions{display:flex;gap:8px;margin-top:auto} .cardActions button{flex:1} .hidden{display:none!important}
+.detailLayout{display:grid;grid-template-columns:320px 1fr;gap:16px} .detailAside,.detailMain{background:white;border:1px solid var(--line);border-radius:20px;padding:16px;box-shadow:var(--shadow)} .detailAside{height:max-content}
+.factorGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px} .factor{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fbfdff} .factorName{font-size:12px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px} .factorValue{white-space:pre-wrap}
+.compareWrap{overflow:auto;background:white;border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)} table{width:100%;border-collapse:separate;border-spacing:0} th,td{border-bottom:1px solid var(--line);padding:11px 10px;text-align:left;vertical-align:top;font-size:14px} th{position:sticky;top:0;background:white;z-index:1;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.columnPicker{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px} .check{display:flex;align-items:center;gap:6px;background:#f9fafb;border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:13px} .check input{width:auto}
+.aiBox{display:grid;grid-template-columns:1fr 180px;gap:10px} .status{font-size:13px;color:var(--muted);margin-top:10px} code{background:#f3f4f6;border-radius:6px;padding:2px 5px} .empty{padding:34px;text-align:center;color:var(--muted)}
+@media(max-width:980px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))} .filters,.settings{grid-template-columns:1fr 1fr} .detailLayout{grid-template-columns:1fr}}
+@media(max-width:650px){.cards,.filters,.settings,.factorGrid,.aiBox{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
-  <header>
-    <div class="wrap">
-      <h1>Europe Family Trip Picker</h1>
-      <p>Pick the best long-weekend city for Oct 29 – Nov 1, 2026. Data comes from Google Sheets, so adding a new row creates a new city card; adding a new column creates a new comparison factor.</p>
-      <div class="topbar">
-        <span class="badge">Google Sheets as DB</span>
-        <span class="badge">Dynamic city cards</span>
-        <span class="badge">Expandable factors</span>
-        <span class="badge">Comparison table</span>
-      </div>
-    </div>
-  </header>
+<header><div class="wrap"><h1>Europe Family Trip Picker</h1><p>Choose a family-friendly European city for Oct 29 – Nov 1, 2026. City cards and comparison factors are generated from Google Sheets.</p><div class="topbar"><span class="badge">Rows = cities</span><span class="badge">Columns = factors</span><span class="badge">Images on cards</span><span class="badge">AI assistant-ready</span></div></div></header>
+<main class="wrap">
+<section class="tabs">
+<button id="tabCards" class="tab active" onclick="setView('cards')">Cards</button>
+<button id="tabCompare" class="tab" onclick="setView('compare')">Comparison table</button>
+<button id="tabAsk" class="tab" onclick="setView('ask')">Ask / Add city</button>
+<button id="tabGuide" class="tab" onclick="setView('guide')">Setup guide</button>
+</section>
 
-  <main class="wrap">
-    <section class="panel">
-      <h2>Data source</h2>
-      <div class="grid settings">
-        <div>
-          <label>Published Google Sheets CSV URL</label>
-          <input id="sheetUrl" placeholder="Paste CSV URL from File → Share → Publish to web" />
-        </div>
-        <div>
-          <label>&nbsp;</label>
-          <button onclick="saveSheetUrl()">Save</button>
-        </div>
-        <div>
-          <label>&nbsp;</label>
-          <button class="secondary" onclick="loadData()">Reload sheet</button>
-        </div>
-        <div>
-          <label>&nbsp;</label>
-          <button class="ghost" onclick="resetSource()">Use demo data</button>
-        </div>
-      </div>
-      <div id="status" class="status">Loading demo data…</div>
-    </section>
+<section id="filterPanel" class="panel">
+<div class="grid filters">
+<div><label>Search</label><input id="search" placeholder="City, beach, aquarium, France, 20C…"></div>
+<div><label>Beach</label><select id="beachFilter"><option value="">Any</option><option value="yes">Beach / coast</option><option value="no">No beach</option></select></div>
+<div><label>Minimum score</label><select id="scoreFilter"><option value="0">Any</option><option value="8">8+</option><option value="8.5">8.5+</option><option value="9">9+</option></select></div>
+<div><label>Sort</label><select id="sortBy"></select></div>
+<div><label>Share</label><button onclick="copyShareText()" style="width:100%">Copy shortlist</button></div>
+</div>
+</section>
 
-    <section class="tabs" aria-label="Views">
-      <button id="tabCards" class="tab active" onclick="setView('cards')">Cards</button>
-      <button id="tabCompare" class="tab" onclick="setView('compare')">Comparison table</button>
-      <button id="tabGuide" class="tab" onclick="setView('guide')">Setup guide</button>
-    </section>
+<section id="cardsView"><div id="cards" class="cards"></div></section>
+<section id="detailView" class="hidden"><button class="ghost small" onclick="backToCards()">← Back to all cities</button><div id="detail" class="detailLayout" style="margin-top:12px"></div></section>
 
-    <section id="filterPanel" class="panel">
-      <div class="grid filters">
-        <div>
-          <label>Search</label>
-          <input id="search" placeholder="City, beach, aquarium, France, 20°C…" />
-        </div>
-        <div>
-          <label>Beach</label>
-          <select id="beachFilter">
-            <option value="">Any</option>
-            <option value="yes">Beach / coast</option>
-            <option value="no">No beach</option>
-          </select>
-        </div>
-        <div>
-          <label>Minimum score</label>
-          <select id="scoreFilter">
-            <option value="0">Any</option>
-            <option value="8">8+</option>
-            <option value="8.5">8.5+</option>
-            <option value="9">9+</option>
-          </select>
-        </div>
-        <div>
-          <label>Sort</label>
-          <select id="sortBy"></select>
-        </div>
-        <div>
-          <label>Share</label>
-          <button onclick="copyShareText()" style="width:100%">Copy shortlist</button>
-        </div>
-      </div>
-    </section>
+<section id="compareView" class="hidden">
+<section class="panel"><h2>Choose comparison factors</h2><p class="muted">These are detected from your Google Sheet columns. Add a column to the sheet, reload, and it appears here.</p><div id="columnPicker" class="columnPicker"></div></section>
+<div id="comparison" class="compareWrap"></div>
+</section>
 
-    <section id="cardsView">
-      <div id="cards" class="cards"></div>
-    </section>
+<section id="askView" class="hidden">
+<section class="panel">
+<h2>Ask about the shortlist</h2>
+<p class="muted">For a public/shared site, do not put an OpenAI API key directly in the browser. Use a small backend or Google Apps Script proxy. For local/private testing only, you can paste a temporary key below; it stays in this browser's local storage.</p>
+<div class="grid settings"><div><label>OpenAI API key (local testing only)</label><input id="openaiKey" type="password" placeholder="sk-..."></div><div><label>&nbsp;</label><button onclick="saveOpenAIKey()">Save key</button></div><div><label>&nbsp;</label><button class="ghost" onclick="clearOpenAIKey()">Clear key</button></div><div><label>Model</label><input id="modelName" value="gpt-4.1-mini"></div></div>
+<div style="margin-top:14px"><label>Question</label><textarea id="aiQuestion" rows="4" placeholder="Example: Compare Valencia and Nice for a family with an 8-year-old."></textarea></div>
+<div style="margin-top:10px"><button onclick="askAI()">Ask AI</button></div>
+<div id="aiAnswer" class="panel hidden"></div>
+</section>
+<section class="panel">
+<h2>Add a city with AI</h2>
+<p class="muted">The browser cannot securely write to Google Sheets by itself. Best approach: deploy the included Google Apps Script endpoint, paste its Web App URL below, and the app can append rows. Without the endpoint, AI will generate a CSV row for manual paste.</p>
+<div class="grid settings"><div><label>Apps Script Web App URL for appending rows</label><input id="appendUrl" placeholder="https://script.google.com/macros/s/.../exec"></div><div><label>&nbsp;</label><button onclick="saveAppendUrl()">Save URL</button></div><div><label>&nbsp;</label><button class="ghost" onclick="clearAppendUrl()">Clear URL</button></div></div>
+<div style="margin-top:14px"><label>City to add</label><input id="newCityName" placeholder="e.g. Porto, Athens, Dubrovnik"></div>
+<div style="margin-top:10px"><button onclick="generateCityRow()">Generate row</button> <button class="secondary" onclick="appendGeneratedRow()">Append generated row</button></div>
+<div style="margin-top:14px"><label>Generated CSV row / JSON</label><textarea id="generatedRow" rows="8" placeholder="Generated row appears here."></textarea></div>
+</section>
+</section>
 
-    <section id="detailView" class="hidden">
-      <button class="ghost small" onclick="backToCards()">← Back to all cities</button>
-      <div id="detail" class="detailLayout" style="margin-top:12px"></div>
-    </section>
-
-    <section id="compareView" class="hidden">
-      <section class="panel">
-        <h2>Choose comparison factors</h2>
-        <p class="muted">Columns are discovered from your Google Sheet. When you add a new column, it appears here automatically after reload.</p>
-        <div id="columnPicker" class="columnPicker"></div>
-      </section>
-      <div id="comparison" class="compareWrap"></div>
-    </section>
-
-    <section id="guideView" class="hidden panel">
-      <h2>Google Sheets structure</h2>
-      <p>Use one row per city. Required minimum columns are <code>city</code> and preferably <code>country</code>. Everything else is optional and becomes a comparison factor automatically.</p>
-      <p>Recommended columns:</p>
-      <p><code>city, country, overall, weather, beach, flight, flight_cost, hotel_estimate, child_activities, sightseeing, day_trips, food, walkability, rain_risk, pros, cons, ideal, notes</code></p>
-      <h2>Publishing steps</h2>
-      <ol>
-        <li>Google Sheets → <b>File</b> → <b>Share</b> → <b>Publish to web</b>.</li>
-        <li>Select the sheet tab and choose <b>Comma-separated values (.csv)</b>.</li>
-        <li>Copy the published CSV URL.</li>
-        <li>Paste it into this page and click <b>Save</b>.</li>
-        <li>Upload this <code>index.html</code> to GitHub Pages / Netlify / Vercel.</li>
-      </ol>
-      <h2>Making it more sophisticated later</h2>
-      <ul>
-        <li>Add numeric columns like <code>flight_score</code>, <code>hotel_score</code>, <code>child_score</code>, <code>weather_score</code>.</li>
-        <li>Add a weighted scoring model with sliders.</li>
-        <li>Add a second sheet for itinerary ideas per city.</li>
-        <li>Add live flight-price fields manually or via an external API/backend.</li>
-      </ul>
-    </section>
-
-    <div class="footer">Tip: Keep the Google Sheet public/published only if the contents are safe to share. Published CSV links are effectively public.</div>
-  </main>
-
+<section id="guideView" class="hidden">
+<section class="panel">
+<h2>Data source</h2>
+<div class="grid settings">
+<div><label>Published Google Sheets CSV URL</label><input id="sheetUrl" placeholder="Paste CSV URL from File → Share → Publish to web"></div>
+<div><label>&nbsp;</label><button onclick="saveSheetUrl()">Save</button></div>
+<div><label>&nbsp;</label><button class="secondary" onclick="loadData()">Reload sheet</button></div>
+<div><label>&nbsp;</label><button class="ghost" onclick="resetSource()">Use demo data</button></div>
+</div>
+<div id="status" class="status">Loading demo data…</div>
+</section>
+<section class="panel">
+<h2>Google Sheet columns</h2>
+<p>Minimum: <code>city</code>. Recommended full header is in the CSV file I prepared. Any new column becomes a comparison factor automatically.</p>
+<p>For city images, add an <code>image_url</code> column. Use a direct public image URL.</p>
+<h2>Writing to Google Sheets</h2>
+<p>Reading from published CSV is easy. Writing needs an authenticated layer. Use the included <code>google-apps-script.gs</code> as a simple append endpoint, or use a proper backend on Vercel/Netlify.</p>
+<p><b>Security:</b> never expose a real OpenAI API key in a public frontend. Use browser key only for local/private testing.</p>
+</section>
+</section>
+</main>
 <script>
-const DEMO_DATA = [
-  {city:"Valencia",country:"Spain",overall:"9.7",weather:"22–25°C, generally mild/sunny",beach:"Yes",flight:"~4h direct/1-stop",flight_cost:"€220–350 pp est.",hotel_estimate:"Medium",child_activities:"Oceanogràfic aquarium; Science Museum; Gulliver Park; Turia Gardens; beach promenade",sightseeing:"City of Arts and Sciences; Old Town; Central Market; Cathedral",day_trips:"Albufera",pros:"Best balance for family, weather, beach, science activities, and easy logistics",cons:"Less iconic than Rome/Paris/Barcelona",ideal:"Best overall family choice"},
-  {city:"Barcelona",country:"Spain",overall:"9.5",weather:"20–23°C, mild; some rain risk",beach:"Yes",flight:"~3h40 direct",flight_cost:"€180–320 pp est.",hotel_estimate:"High",child_activities:"Aquarium; Tibidabo; cable car; Park Güell; beach; football stadium interest",sightseeing:"Sagrada Familia; Gothic Quarter; Park Güell; Casa Batlló; Barceloneta",day_trips:"Montserrat",pros:"Most complete package: architecture, beach, food, child activities",cons:"Crowded and pricier hotels",ideal:"Safe all-rounder"},
-  {city:"Lisbon",country:"Portugal",overall:"9.3",weather:"20–24°C, mild Atlantic autumn",beach:"Nearby coast",flight:"~5h direct/1-stop",flight_cost:"€250–450 pp est.",hotel_estimate:"Medium",child_activities:"Oceanarium; trams; cable car; Sintra castles; riverfront",sightseeing:"Belém; Alfama; Praça do Comércio; São Jorge Castle",day_trips:"Sintra; Cascais",pros:"Beautiful, warm, scenic, excellent child-friendly attractions",cons:"Hilly and more tiring with kids; longer flight",ideal:"Scenic warm city break"},
-  {city:"Málaga",country:"Spain",overall:"9.2",weather:"22–25°C, one of the warmest options",beach:"Yes",flight:"~4h30 direct/1-stop",flight_cost:"€220–400 pp est.",hotel_estimate:"Medium",child_activities:"Beach; promenade; Alcazaba; interactive museums; Nerja caves/Bioparc Fuengirola",sightseeing:"Alcazaba; Cathedral; Picasso Museum; Muelle Uno",day_trips:"Nerja; Ronda; Marbella",pros:"Best weather and relaxed pace",cons:"Less major-city wow factor",ideal:"Warmest relaxed option"},
-  {city:"Nice",country:"France",overall:"9.0",weather:"18–22°C, pleasant Riviera autumn",beach:"Yes, pebble beach",flight:"~3h10 direct/1-stop",flight_cost:"€180–330 pp est.",hotel_estimate:"High",child_activities:"Promenade; beach; parks; train to Monaco; Antibes; boats",sightseeing:"Old Nice; Castle Hill; Promenade des Anglais; Monaco; Èze",day_trips:"Monaco; Cannes; Antibes",pros:"Elegant, compact, multiple destinations in one trip",cons:"Hotels/food can be expensive; beach is pebbly",ideal:"Most elegant Riviera trip"},
-  {city:"Rome",country:"Italy",overall:"8.9",weather:"19–23°C, mild autumn",beach:"No",flight:"~2h40 direct",flight_cost:"€150–280 pp est.",hotel_estimate:"Medium",child_activities:"Colosseum gladiator tours; Explora children’s museum; gelato; fountains",sightseeing:"Colosseum; Roman Forum; Vatican; Pantheon; Trevi Fountain",day_trips:"Tivoli",pros:"Huge wow factor, short flight, excellent food",cons:"Crowded; heavy sightseeing can tire a child",ideal:"Best classic European city"}
-];
+const DEMO_DATA = [{"city": "Valencia", "country": "Spain", "region": "Mediterranean", "overall": 9.7, "weather": "22-25C, generally mild/sunny", "weather_score": 10, "rain_risk": "Low", "beach": "Yes", "beach_quality": 9, "flight": "~4h", "direct_flight": "Yes", "flight_frequency": "Medium", "flight_cost": "220-350 EUR pp", "family_budget_score": 8, "hotel_estimate": "Medium", "hotel_family_room_cost": "140-220 EUR/night", "airport_transfer_score": 8, "child_score": 10, "child_activities": "Oceanografic; Science Museum; Gulliver Park; Turia Gardens; beach promenade", "aquarium": "Yes", "science_museum": "Yes", "football_stadium": "No", "theme_park": "No", "sightseeing_score": 9, "sightseeing": "City of Arts and Sciences; Old Town; Central Market; Cathedral; Turia Park", "day_trips": "Albufera", "food_score": 9, "food": "Paella; tapas; markets", "walkability_score": 9, "crowd_level": "Medium", "wife_score": 9, "taha_score": 9, "son_score": 10, "pros": "Best balance for family, weather, beach, science activities, and easy logistics", "cons": "Less iconic than Rome or Paris", "ideal": "Best overall family choice", "notes": "Very strong for an 8-year-old because of aquarium + science museum", "image_url": "https://images.unsplash.com/photo-1623238821052-7155395e164c?auto=format&fit=crop&w=1200&q=80"}, {"city": "Barcelona", "country": "Spain", "region": "Mediterranean", "overall": 9.5, "weather": "20-23C, mild; some rain risk", "weather_score": 8, "rain_risk": "Medium", "beach": "Yes", "beach_quality": 8, "flight": "~3h40", "direct_flight": "Yes", "flight_frequency": "High", "flight_cost": "180-320 EUR pp", "family_budget_score": 8, "hotel_estimate": "High", "hotel_family_room_cost": "180-300 EUR/night", "airport_transfer_score": 8, "child_score": 10, "child_activities": "Aquarium; Tibidabo; cable car; Park Guell; beach; football stadium interest", "aquarium": "Yes", "science_museum": "No", "football_stadium": "Yes", "theme_park": "Yes", "sightseeing_score": 10, "sightseeing": "Sagrada Familia; Gothic Quarter; Park Guell; Casa Batllo; Barceloneta", "day_trips": "Montserrat", "food_score": 10, "food": "Tapas; seafood; markets", "walkability_score": 9, "crowd_level": "High", "wife_score": 9, "taha_score": 9, "son_score": 10, "pros": "Most complete package: architecture, beach, food, child activities", "cons": "Crowded and pricier hotels", "ideal": "Safe all-rounder", "notes": "Book major sights early", "image_url": "https://images.unsplash.com/photo-1583422409516-2895a77efded?auto=format&fit=crop&w=1200&q=80"}, {"city": "Lisbon", "country": "Portugal", "region": "Atlantic", "overall": 9.3, "weather": "20-24C, mild Atlantic autumn", "weather_score": 9, "rain_risk": "Medium", "beach": "Nearby coast", "beach_quality": 7, "flight": "~5h", "direct_flight": "Usually", "flight_frequency": "Medium", "flight_cost": "250-450 EUR pp", "family_budget_score": 7, "hotel_estimate": "Medium", "hotel_family_room_cost": "130-220 EUR/night", "airport_transfer_score": 7, "child_score": 10, "child_activities": "Oceanarium; trams; cable car; Sintra castles; riverfront", "aquarium": "Yes", "science_museum": "Yes", "football_stadium": "No", "theme_park": "No", "sightseeing_score": 9, "sightseeing": "Belem; Alfama; Praca do Comercio; Sao Jorge Castle", "day_trips": "Sintra; Cascais", "food_score": 9, "food": "Seafood; pasteis de nata", "walkability_score": 7, "crowd_level": "Medium", "wife_score": 9, "taha_score": 9, "son_score": 10, "pros": "Beautiful, warm, scenic, excellent child-friendly attractions", "cons": "Hilly and more tiring with kids; longer flight", "ideal": "Scenic warm city break", "notes": "Sintra can be magical for children", "image_url": "https://images.unsplash.com/photo-1548707309-dcebeab9ea9b?auto=format&fit=crop&w=1200&q=80"}, {"city": "Malaga", "country": "Spain", "region": "Andalusia", "overall": 9.2, "weather": "22-25C, one of the warmest options", "weather_score": 10, "rain_risk": "Low", "beach": "Yes", "beach_quality": 8, "flight": "~4h30", "direct_flight": "Sometimes/seasonal", "flight_frequency": "Medium", "flight_cost": "220-400 EUR pp", "family_budget_score": 8, "hotel_estimate": "Medium", "hotel_family_room_cost": "120-210 EUR/night", "airport_transfer_score": 8, "child_score": 8, "child_activities": "Beach; promenade; Alcazaba; interactive museums; Nerja caves; Bioparc Fuengirola nearby", "aquarium": "Nearby", "science_museum": "Some", "football_stadium": "No", "theme_park": "No", "sightseeing_score": 8, "sightseeing": "Alcazaba; Cathedral; Picasso Museum; Muelle Uno; Gibralfaro", "day_trips": "Nerja; Marbella; Ronda; Mijas", "food_score": 9, "food": "Seafood; tapas", "walkability_score": 9, "crowd_level": "Low-Medium", "wife_score": 9, "taha_score": 8, "son_score": 9, "pros": "Best weather and relaxed pace", "cons": "Less major-city wow factor", "ideal": "Warm relaxed option", "notes": "Strong if weather is the main decision factor", "image_url": "https://images.unsplash.com/photo-1599145875108-7136574561a5?auto=format&fit=crop&w=1200&q=80"}, {"city": "Nice", "country": "France", "region": "French Riviera", "overall": 9.0, "weather": "18-22C, pleasant Riviera autumn", "weather_score": 8, "rain_risk": "Low", "beach": "Yes, pebble beach", "beach_quality": 7, "flight": "~3h10", "direct_flight": "Yes/seasonal", "flight_frequency": "Medium", "flight_cost": "180-330 EUR pp", "family_budget_score": 6, "hotel_estimate": "High", "hotel_family_room_cost": "180-320 EUR/night", "airport_transfer_score": 9, "child_score": 8, "child_activities": "Promenade; beach; parks; train to Monaco; Antibes; boats", "aquarium": "No", "science_museum": "No", "football_stadium": "No", "theme_park": "No", "sightseeing_score": 9, "sightseeing": "Old Nice; Castle Hill; Promenade des Anglais; Monaco; Eze", "day_trips": "Monaco; Cannes; Antibes", "food_score": 9, "food": "French Riviera cuisine; seafood", "walkability_score": 9, "crowd_level": "Medium", "wife_score": 9, "taha_score": 9, "son_score": 8, "pros": "Elegant, compact, multiple destinations in one trip", "cons": "Hotels and food can be expensive; beach is pebbly", "ideal": "Most elegant Riviera trip", "notes": "Stay near old town or promenade", "image_url": "https://images.unsplash.com/photo-1533614305249-5a4ea29d47c1?auto=format&fit=crop&w=1200&q=80"}, {"city": "Rome", "country": "Italy", "region": "Lazio", "overall": 8.9, "weather": "19-23C, mild autumn", "weather_score": 8, "rain_risk": "Medium", "beach": "No", "beach_quality": 0, "flight": "~2h40", "direct_flight": "Yes", "flight_frequency": "High", "flight_cost": "150-280 EUR pp", "family_budget_score": 9, "hotel_estimate": "Medium", "hotel_family_room_cost": "150-260 EUR/night", "airport_transfer_score": 8, "child_score": 8, "child_activities": "Colosseum gladiator tours; Explora children's museum; gelato; fountains", "aquarium": "No", "science_museum": "Some", "football_stadium": "No", "theme_park": "No", "sightseeing_score": 10, "sightseeing": "Colosseum; Roman Forum; Vatican; Pantheon; Trevi Fountain; Piazza Navona", "day_trips": "Tivoli", "food_score": 10, "food": "Pasta; pizza; gelato", "walkability_score": 8, "crowd_level": "High", "wife_score": 9, "taha_score": 10, "son_score": 8, "pros": "Huge wow factor, short flight, excellent food", "cons": "Crowded; heavy sightseeing can tire a child", "ideal": "Best classic European city", "notes": "Limit museums and mix with piazzas/gelato", "image_url": "https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=1200&q=80"}, {"city": "Madrid", "country": "Spain", "region": "Central Spain", "overall": 8.8, "weather": "18-22C, usually dry/sunny", "weather_score": 8, "rain_risk": "Low", "beach": "No", "beach_quality": 0, "flight": "~4h", "direct_flight": "Yes", "flight_frequency": "High", "flight_cost": "180-320 EUR pp", "family_budget_score": 8, "hotel_estimate": "Medium", "hotel_family_room_cost": "140-240 EUR/night", "airport_transfer_score": 9, "child_score": 9, "child_activities": "Retiro Park boats; Zoo Aquarium; Bernabeu; parks; Warner Park option", "aquarium": "Yes", "science_museum": "Some", "football_stadium": "Yes", "theme_park": "Yes", "sightseeing_score": 8, "sightseeing": "Royal Palace; Plaza Mayor; Prado area; Retiro Park; Gran Via", "day_trips": "Toledo; Segovia", "food_score": 10, "food": "Tapas; markets; churros", "walkability_score": 10, "crowd_level": "Medium", "wife_score": 8, "taha_score": 9, "son_score": 9, "pros": "Excellent food, parks, football, and easy city logistics", "cons": "No sea; less unique than Barcelona/Valencia for 3 nights", "ideal": "Best inland Spain option", "notes": "Very practical if flights are cheap", "image_url": "https://images.unsplash.com/photo-1539037116277-4db20889f2d4?auto=format&fit=crop&w=1200&q=80"}, {"city": "Toulouse", "country": "France", "region": "Occitanie", "overall": 8.5, "weather": "17-21C, mild but less Mediterranean", "weather_score": 7, "rain_risk": "Low", "beach": "No", "beach_quality": 0, "flight": "~4h 1-stop usually", "direct_flight": "No", "flight_frequency": "Low-Medium", "flight_cost": "250-450 EUR pp", "family_budget_score": 6, "hotel_estimate": "Medium", "hotel_family_room_cost": "120-220 EUR/night", "airport_transfer_score": 7, "child_score": 10, "child_activities": "Cite de l'Espace; Aeroscopia/Airbus museum; river walks", "aquarium": "No", "science_museum": "Yes", "football_stadium": "No", "theme_park": "No", "sightseeing_score": 8, "sightseeing": "Capitole; Garonne river; old town", "day_trips": "Carcassonne", "food_score": 8, "food": "Southwest French cuisine", "walkability_score": 8, "crowd_level": "Low", "wife_score": 7, "taha_score": 10, "son_score": 9, "pros": "Excellent for aerospace and science interests", "cons": "Less iconic for a general family vacation", "ideal": "Aerospace family wildcard", "notes": "Perfect if son likes rockets/planes", "image_url": "https://images.unsplash.com/photo-1566041510394-cf7c8fe21800?auto=format&fit=crop&w=1200&q=80"}];
+const REQUIRED_COLUMNS = ["city", "country", "region", "overall", "weather", "weather_score", "rain_risk", "beach", "beach_quality", "flight", "direct_flight", "flight_frequency", "flight_cost", "family_budget_score", "hotel_estimate", "hotel_family_room_cost", "airport_transfer_score", "child_score", "child_activities", "aquarium", "science_museum", "football_stadium", "theme_park", "sightseeing_score", "sightseeing", "day_trips", "food_score", "food", "walkability_score", "crowd_level", "wife_score", "taha_score", "son_score", "pros", "cons", "ideal", "notes", "image_url"];
+const CORE = ["city","country","overall","weather","beach","flight","flight_cost","hotel_estimate","child_score","weather_score","rain_risk","image_url"];
+let data=[], columns=[], visibleColumns=new Set(), generatedObject=null;
 
-const CORE = ["city","country","overall","weather","beach","flight","flight_cost"];
-const HIDE_IN_DETAIL = new Set(["city","country"]);
-let data = [];
-let columns = [];
-let visibleColumns = new Set();
-let currentView = "cards";
-
-function normalizeKey(s){
-  return String(s || "").trim().toLowerCase().replace(/\s+/g,"_").replace(/[^\w]/g,"_").replace(/_+/g,"_").replace(/^_|_$/g,"");
-}
-function labelFor(key){
-  return String(key).replace(/_/g," ").replace(/\b\w/g, c => c.toUpperCase());
-}
-function parseCSV(text){
-  const rows=[]; let row=[], val='', inQuotes=false;
-  for(let i=0;i<text.length;i++){
-    const c=text[i], n=text[i+1];
-    if(c=='"' && inQuotes && n=='"'){ val+='"'; i++; }
-    else if(c=='"'){ inQuotes=!inQuotes; }
-    else if(c==',' && !inQuotes){ row.push(val); val=''; }
-    else if((c=='\n' || c=='\r') && !inQuotes){
-      if(val || row.length){ row.push(val); rows.push(row); row=[]; val=''; }
-      if(c=='\r' && n=='\n') i++;
-    } else val+=c;
-  }
-  if(val || row.length){ row.push(val); rows.push(row); }
-  return rows.filter(r => r.some(x => String(x).trim()));
-}
-function csvToObjects(text){
-  const rows = parseCSV(text);
-  if(!rows.length) return [];
-  const headers = rows[0].map(normalizeKey);
-  return rows.slice(1).map(r => {
-    const obj = {};
-    headers.forEach((h,i) => obj[h] = (r[i] || "").trim());
-    return obj;
-  }).filter(o => o.city);
-}
-function setData(rows, sourceLabel){
-  data = rows;
-  columns = Array.from(new Set(rows.flatMap(r => Object.keys(r)))).filter(Boolean);
-  if(!columns.includes("city")) columns.unshift("city");
-  visibleColumns = new Set(columns.filter(c => CORE.includes(c) || ["hotel_estimate","child_activities","sightseeing","day_trips","rain_risk","walkability"].includes(c)).slice(0,10));
-  populateSort();
-  renderAll();
-  document.getElementById("status").textContent = `Loaded ${rows.length} cities from ${sourceLabel}. Detected ${columns.length} comparison factors.`;
-}
-function populateSort(){
-  const sort = document.getElementById("sortBy");
-  sort.innerHTML = "";
-  const preferred = ["overall","city","country","flight_cost","hotel_estimate","weather"];
-  const opts = Array.from(new Set(preferred.concat(columns))).filter(c => columns.includes(c));
-  opts.forEach(c => {
-    const o = document.createElement("option");
-    o.value = c; o.textContent = labelFor(c);
-    sort.appendChild(o);
-  });
-  if(columns.includes("overall")) sort.value = "overall";
-}
-function saveSheetUrl(){
-  const url = document.getElementById("sheetUrl").value.trim();
-  localStorage.setItem("tripPickerSheetUrl", url);
-  document.getElementById("status").textContent = url ? "Saved sheet URL. Click Reload sheet." : "Cleared sheet URL.";
-}
-function resetSource(){
-  localStorage.removeItem("tripPickerSheetUrl");
-  document.getElementById("sheetUrl").value = "";
-  setData(DEMO_DATA, "demo data");
-}
-async function loadData(){
-  const url = (document.getElementById("sheetUrl").value || localStorage.getItem("tripPickerSheetUrl") || "").trim();
-  if(!url){ setData(DEMO_DATA, "demo data"); return; }
-  document.getElementById("status").textContent = "Loading Google Sheet CSV…";
-  try{
-    const res = await fetch(url);
-    if(!res.ok) throw new Error(`HTTP ${res.status}`);
-    const rows = csvToObjects(await res.text());
-    if(!rows.length) throw new Error("No city rows found. Check that the CSV has a city column.");
-    setData(rows, "Google Sheets");
-  }catch(err){
-    document.getElementById("status").textContent = `Could not load sheet: ${err.message}. Showing demo data.`;
-    setData(DEMO_DATA, "demo data");
-  }
-}
-function getFiltered(){
-  const q = document.getElementById("search").value.toLowerCase();
-  const beach = document.getElementById("beachFilter").value;
-  const minScore = Number(document.getElementById("scoreFilter").value || 0);
-  const sortBy = document.getElementById("sortBy").value || "overall";
-  let rows = data.filter(r => {
-    const blob = Object.values(r).join(" ").toLowerCase();
-    const beachText = String(r.beach || "").toLowerCase();
-    const beachOk = !beach || (beach === "yes" ? (beachText.includes("yes") || beachText.includes("near") || beachText.includes("coast")) : beachText.includes("no"));
-    return blob.includes(q) && beachOk && Number(r.overall || 0) >= minScore;
-  });
-  rows.sort((a,b) => {
-    if(sortBy === "overall") return Number(b.overall || 0) - Number(a.overall || 0);
-    const av = a[sortBy] || "", bv = b[sortBy] || "";
-    const an = Number(av), bn = Number(bv);
-    if(!Number.isNaN(an) && !Number.isNaN(bn) && av !== "" && bv !== "") return bn - an;
-    return String(av).localeCompare(String(bv));
-  });
-  return rows;
-}
-function mainChips(row){
-  const chips = [];
-  if(row.weather) chips.push(["Weather", row.weather, ""]);
-  if(row.beach) chips.push(["Beach", row.beach, String(row.beach).toLowerCase().includes("no") ? "warn" : "good"]);
-  if(row.flight) chips.push(["Flight", row.flight, ""]);
-  if(row.flight_cost) chips.push(["Flight Cost", row.flight_cost, ""]);
-  if(row.hotel_estimate) chips.push(["Hotel", row.hotel_estimate, ""]);
-  return chips.slice(0,5).map(([k,v,cls]) => `<span class="chip ${cls}"><b>${k}:</b> ${v}</span>`).join("");
-}
-function renderCards(){
-  const el = document.getElementById("cards");
-  const rows = getFiltered();
-  if(!rows.length){ el.innerHTML = `<div class="empty panel">No cities match your filters.</div>`; return; }
-  el.innerHTML = rows.map((r,idx) => {
-    const city = r.city || `City ${idx+1}`;
-    return `<article class="card">
-      <div class="cardHero"><div><h3>${escapeHtml(city)}</h3><div class="country">${escapeHtml(r.country || "")}</div></div></div>
-      <div class="cardBody">
-        <div class="scoreRow">
-          <div><div class="muted">Overall score</div><div class="score">${escapeHtml(r.overall || "—")}</div></div>
-          <div class="muted">Rank #${idx+1}</div>
-        </div>
-        <div class="chips">${mainChips(r)}</div>
-        <div><b>Child activities</b><br><span class="muted">${escapeHtml(r.child_activities || r.child || "Add child_activities column in the sheet.")}</span></div>
-        <div class="cardActions">
-          <button onclick='showDetail(${JSON.stringify(city)})'>Analyze</button>
-          <button class="ghost" onclick='copyCity(${JSON.stringify(city)})'>Copy</button>
-        </div>
-      </div>
-    </article>`;
-  }).join("");
-}
-function showDetail(city){
-  const row = data.find(r => r.city === city);
-  if(!row) return;
-  document.getElementById("cardsView").classList.add("hidden");
-  document.getElementById("detailView").classList.remove("hidden");
-  const detailCols = columns.filter(c => !HIDE_IN_DETAIL.has(c) && row[c]);
-  const important = ["overall","weather","beach","flight","flight_cost","hotel_estimate","child_activities","sightseeing","day_trips","pros","cons","ideal"];
-  const ordered = Array.from(new Set(important.concat(detailCols))).filter(c => row[c] && !HIDE_IN_DETAIL.has(c));
-  document.getElementById("detail").innerHTML = `
-    <aside class="detailAside">
-      <h2>${escapeHtml(row.city || "")}</h2>
-      <p class="muted">${escapeHtml(row.country || "")}</p>
-      <div class="score">${escapeHtml(row.overall || "—")}</div>
-      <p>${escapeHtml(row.ideal || "")}</p>
-      <button onclick="copyCity(${JSON.stringify(row.city)})" style="width:100%">Copy this city summary</button>
-    </aside>
-    <section class="detailMain">
-      <h2>Detailed analysis</h2>
-      <div class="factorGrid">
-        ${ordered.map(c => `<div class="factor"><div class="factorName">${escapeHtml(labelFor(c))}</div><div class="factorValue">${escapeHtml(row[c])}</div></div>`).join("")}
-      </div>
-    </section>`;
-}
-function backToCards(){
-  document.getElementById("detailView").classList.add("hidden");
-  document.getElementById("cardsView").classList.remove("hidden");
-}
-function renderColumnPicker(){
-  const el = document.getElementById("columnPicker");
-  el.innerHTML = columns.map(c => `<label class="check"><input type="checkbox" ${visibleColumns.has(c) ? "checked" : ""} onchange="toggleColumn('${c}', this.checked)"> ${labelFor(c)}</label>`).join("");
-}
-function toggleColumn(c, checked){
-  checked ? visibleColumns.add(c) : visibleColumns.delete(c);
-  renderComparison();
-}
-function renderComparison(){
-  const rows = getFiltered();
-  const cols = columns.filter(c => visibleColumns.has(c));
-  document.getElementById("comparison").innerHTML = `<table>
-    <thead><tr>${cols.map(c => `<th>${escapeHtml(labelFor(c))}</th>`).join("")}</tr></thead>
-    <tbody>${rows.map(r => `<tr>${cols.map(c => `<td>${escapeHtml(r[c] || "")}</td>`).join("")}</tr>`).join("")}</tbody>
-  </table>`;
-}
-function renderAll(){
-  renderCards();
-  renderColumnPicker();
-  renderComparison();
-}
-function setView(view){
-  currentView = view;
-  ["cards","compare","guide"].forEach(v => {
-    document.getElementById(`tab${v[0].toUpperCase()+v.slice(1)}`).classList.toggle("active", v === view);
-  });
-  document.getElementById("cardsView").classList.toggle("hidden", view !== "cards");
-  document.getElementById("detailView").classList.add("hidden");
-  document.getElementById("compareView").classList.toggle("hidden", view !== "compare");
-  document.getElementById("guideView").classList.toggle("hidden", view !== "guide");
-  document.getElementById("filterPanel").classList.toggle("hidden", view === "guide");
-}
-function copyCity(city){
-  const r = data.find(x => x.city === city);
-  if(!r) return;
-  const lines = columns.filter(c => r[c] && ["city","country","overall","weather","beach","flight","flight_cost","hotel_estimate","child_activities","sightseeing","pros","cons","ideal"].includes(c))
-    .map(c => `${labelFor(c)}: ${r[c]}`);
-  navigator.clipboard.writeText(lines.join("\n"));
-  alert(`${city} summary copied.`);
-}
-function copyShareText(){
-  const rows = getFiltered().slice(0,5);
-  const text = "Our family trip shortlist:\n\n" + rows.map((r,i) => `${i+1}. ${r.city} (${r.country || ""}) — score ${r.overall || "—"}\nWeather: ${r.weather || "—"}\nFlight: ${r.flight || "—"} / ${r.flight_cost || "—"}\nChild activities: ${r.child_activities || r.child || "—"}`).join("\n\n");
-  navigator.clipboard.writeText(text);
-  alert("Shortlist copied.");
-}
-function escapeHtml(x){
-  return String(x ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
-}
-["search","beachFilter","scoreFilter","sortBy"].forEach(id => document.getElementById(id).addEventListener("input", renderAll));
-document.getElementById("sheetUrl").value = localStorage.getItem("tripPickerSheetUrl") || "";
+function normalizeKey(s){return String(s||"").trim().toLowerCase().replace(/\s+/g,"_").replace(/[^\w]/g,"_").replace(/_+/g,"_").replace(/^_|_$/g,"")}
+function labelFor(key){return String(key).replace(/_/g," ").replace(/\b\w/g,c=>c.toUpperCase())}
+function escapeHtml(x){return String(x??"").replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function parseCSV(text){const rows=[];let row=[],val='',q=false;for(let i=0;i<text.length;i++){const c=text[i],n=text[i+1];if(c=='"'&&q&&n=='"'){val+='"';i++}else if(c=='"')q=!q;else if(c==','&&!q){row.push(val);val=''}else if((c=='\n'||c=='\r')&&!q){if(val||row.length){row.push(val);rows.push(row);row=[];val=''}if(c=='\r'&&n=='\n')i++}else val+=c}if(val||row.length){row.push(val);rows.push(row)}return rows.filter(r=>r.some(x=>String(x).trim()))}
+function csvToObjects(text){const rows=parseCSV(text);if(!rows.length)return[];const h=rows[0].map(normalizeKey);return rows.slice(1).map(r=>Object.fromEntries(h.map((k,i)=>[k,(r[i]||"").trim()]))).filter(o=>o.city)}
+function setData(rows,source){data=rows;columns=Array.from(new Set(rows.flatMap(r=>Object.keys(r)).concat(REQUIRED_COLUMNS))).filter(Boolean);visibleColumns=new Set(columns.filter(c=>CORE.includes(c)||["direct_flight","family_budget_score","hotel_family_room_cost","airport_transfer_score","child_activities","sightseeing","day_trips","wife_score","taha_score","son_score"].includes(c)).slice(0,16));populateSort();renderAll();const st=document.getElementById("status");if(st)st.textContent=`Loaded ${rows.length} cities from ${source}. Detected ${columns.length} factors.`}
+function populateSort(){const sort=document.getElementById("sortBy");sort.innerHTML="";["overall","city","country","flight_cost","family_budget_score","weather_score","child_score","wife_score","taha_score","son_score"].concat(columns).filter((v,i,a)=>columns.includes(v)&&a.indexOf(v)==i).forEach(c=>{const o=document.createElement("option");o.value=c;o.textContent=labelFor(c);sort.appendChild(o)});if(columns.includes("overall"))sort.value="overall"}
+function saveSheetUrl(){const url=document.getElementById("sheetUrl").value.trim();localStorage.setItem("tripPickerSheetUrl",url);document.getElementById("status").textContent=url?"Saved sheet URL. Click Reload sheet.":"Cleared sheet URL."}
+function resetSource(){localStorage.removeItem("tripPickerSheetUrl");document.getElementById("sheetUrl").value="";setData(DEMO_DATA,"demo data")}
+async function loadData(){const url=(document.getElementById("sheetUrl")?.value||localStorage.getItem("tripPickerSheetUrl")||"").trim();if(!url){setData(DEMO_DATA,"demo data");return}try{document.getElementById("status").textContent="Loading Google Sheet CSV…";const res=await fetch(url);if(!res.ok)throw new Error(`HTTP ${res.status}`);const rows=csvToObjects(await res.text());if(!rows.length)throw new Error("No city rows found.");setData(rows,"Google Sheets")}catch(e){document.getElementById("status").textContent=`Could not load sheet: ${e.message}. Showing demo data.`;setData(DEMO_DATA,"demo data")}}
+function getFiltered(){const q=document.getElementById("search").value.toLowerCase(),beach=document.getElementById("beachFilter").value,min=Number(document.getElementById("scoreFilter").value||0),sortBy=document.getElementById("sortBy").value||"overall";let rows=data.filter(r=>{const blob=Object.values(r).join(" ").toLowerCase(),b=String(r.beach||"").toLowerCase();const beachOk=!beach||(beach==="yes"?(b.includes("yes")||b.includes("near")||b.includes("coast")):b.includes("no"));return blob.includes(q)&&beachOk&&Number(r.overall||0)>=min});rows.sort((a,b)=>{if(sortBy==="overall")return Number(b.overall||0)-Number(a.overall||0);const av=a[sortBy]||"",bv=b[sortBy]||"",an=Number(av),bn=Number(bv);if(!isNaN(an)&&!isNaN(bn)&&av!==""&&bv!=="")return bn-an;return String(av).localeCompare(String(bv))});return rows}
+function imgFor(r){return r.image_url||`https://source.unsplash.com/1200x800/?${encodeURIComponent((r.city||"europe")+" city skyline")}`}
+function mainChips(r){const items=[["Weather",r.weather,""],["Beach",r.beach,String(r.beach||"").toLowerCase().includes("no")?"warn":"good"],["Flight",r.flight,""],["Cost",r.flight_cost,""],["Hotel",r.hotel_estimate,""]].filter(x=>x[1]);return items.map(([k,v,cls])=>`<span class="chip ${cls}"><b>${k}:</b> ${escapeHtml(v)}</span>`).join("")}
+function renderCards(){const el=document.getElementById("cards"),rows=getFiltered();if(!rows.length){el.innerHTML='<div class="empty panel">No cities match your filters.</div>';return}el.innerHTML=rows.map((r,i)=>`<article class="card"><div class="cardImg"><img src="${escapeHtml(imgFor(r))}" onerror="this.style.display='none'"><div class="cardTitle"><h3>${escapeHtml(r.city)}</h3><div class="country">${escapeHtml(r.country||"")}</div></div></div><div class="cardBody"><div class="scoreRow"><div><div class="muted">Overall score</div><div class="score">${escapeHtml(r.overall||"—")}</div></div><div class="muted">Rank #${i+1}</div></div><div class="chips">${mainChips(r)}</div><div><b>Child activities</b><br><span class="muted">${escapeHtml(r.child_activities||"Add child_activities column.")}</span></div><div class="cardActions"><button onclick='showDetail(${JSON.stringify(r.city)})'>Analyze</button><button class="ghost" onclick='copyCity(${JSON.stringify(r.city)})'>Copy</button></div></div></article>`).join("")}
+function showDetail(city){const r=data.find(x=>x.city===city);if(!r)return;document.getElementById("cardsView").classList.add("hidden");document.getElementById("detailView").classList.remove("hidden");const ordered=Array.from(new Set(["overall","weather","weather_score","rain_risk","beach","beach_quality","flight","direct_flight","flight_frequency","flight_cost","family_budget_score","hotel_estimate","hotel_family_room_cost","airport_transfer_score","child_score","child_activities","aquarium","science_museum","football_stadium","theme_park","sightseeing","day_trips","food","walkability_score","crowd_level","wife_score","taha_score","son_score","pros","cons","ideal","notes"].concat(columns))).filter(c=>r[c]&& !["city","country","image_url"].includes(c));document.getElementById("detail").innerHTML=`<aside class="detailAside"><img src="${escapeHtml(imgFor(r))}" style="width:100%;height:170px;object-fit:cover;border-radius:14px;margin-bottom:12px" onerror="this.style.display='none'"><h2>${escapeHtml(r.city)}</h2><p class="muted">${escapeHtml(r.country||"")}</p><div class="score">${escapeHtml(r.overall||"—")}</div><p>${escapeHtml(r.ideal||"")}</p><button onclick='copyCity(${JSON.stringify(r.city)})' style="width:100%">Copy summary</button></aside><section class="detailMain"><h2>Detailed analysis</h2><div class="factorGrid">${ordered.map(c=>`<div class="factor"><div class="factorName">${escapeHtml(labelFor(c))}</div><div class="factorValue">${escapeHtml(r[c])}</div></div>`).join("")}</div></section>`}
+function backToCards(){document.getElementById("detailView").classList.add("hidden");document.getElementById("cardsView").classList.remove("hidden")}
+function renderColumnPicker(){document.getElementById("columnPicker").innerHTML=columns.filter(c=>c!=="image_url").map(c=>`<label class="check"><input type="checkbox" ${visibleColumns.has(c)?"checked":""} onchange="toggleColumn('${c}',this.checked)"> ${labelFor(c)}</label>`).join("")}
+function toggleColumn(c,on){on?visibleColumns.add(c):visibleColumns.delete(c);renderComparison()}
+function renderComparison(){const rows=getFiltered(),cols=columns.filter(c=>visibleColumns.has(c)&&c!=="image_url");document.getElementById("comparison").innerHTML=`<table><thead><tr>${cols.map(c=>`<th>${escapeHtml(labelFor(c))}</th>`).join("")}</tr></thead><tbody>${rows.map(r=>`<tr>${cols.map(c=>`<td>${escapeHtml(r[c]||"")}</td>`).join("")}</tr>`).join("")}</tbody></table>`}
+function renderAll(){renderCards();renderColumnPicker();renderComparison()}
+function setView(v){["Cards","Compare","Ask","Guide"].forEach(x=>document.getElementById("tab"+x).classList.toggle("active",x.toLowerCase()===v));document.getElementById("cardsView").classList.toggle("hidden",v!=="cards");document.getElementById("detailView").classList.add("hidden");document.getElementById("compareView").classList.toggle("hidden",v!=="compare");document.getElementById("askView").classList.toggle("hidden",v!=="ask");document.getElementById("guideView").classList.toggle("hidden",v!=="guide");document.getElementById("filterPanel").classList.toggle("hidden",v==="guide"||v==="ask")}
+function copyCity(city){const r=data.find(x=>x.city===city);const keys=["city","country","overall","weather","beach","flight","flight_cost","hotel_estimate","child_activities","sightseeing","pros","cons","ideal"];navigator.clipboard.writeText(keys.filter(k=>r[k]).map(k=>`${labelFor(k)}: ${r[k]}`).join("\n"));alert(city+" summary copied.")}
+function copyShareText(){const rows=getFiltered().slice(0,5);navigator.clipboard.writeText("Our family trip shortlist:\n\n"+rows.map((r,i)=>`${i+1}. ${r.city} (${r.country||""}) — score ${r.overall||"—"}\nWeather: ${r.weather||"—"}\nFlight: ${r.flight||"—"} / ${r.flight_cost||"—"}\nChild: ${r.child_activities||"—"}`).join("\n\n"));alert("Shortlist copied.")}
+function saveOpenAIKey(){localStorage.setItem("openaiKey",document.getElementById("openaiKey").value);alert("Saved locally in this browser only.")}
+function clearOpenAIKey(){localStorage.removeItem("openaiKey");document.getElementById("openaiKey").value="";alert("Cleared.")}
+function saveAppendUrl(){localStorage.setItem("appendUrl",document.getElementById("appendUrl").value.trim());alert("Saved append URL.")}
+function clearAppendUrl(){localStorage.removeItem("appendUrl");document.getElementById("appendUrl").value="";alert("Cleared.")}
+async function askAI(){const key=document.getElementById("openaiKey").value||localStorage.getItem("openaiKey");if(!key){alert("Add API key for local testing, or use backend proxy.");return}const q=document.getElementById("aiQuestion").value;const context=JSON.stringify(getFiltered().slice(0,20));const answer=document.getElementById("aiAnswer");answer.classList.remove("hidden");answer.textContent="Thinking…";try{const res=await fetch("https://api.openai.com/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},body:JSON.stringify({model:document.getElementById("modelName").value||"gpt-4.1-mini",messages:[{role:"system",content:"You are a family travel advisor. Use only the provided city data unless clearly saying an estimate."},{role:"user",content:"City data: "+context+"\n\nQuestion: "+q}],temperature:.3})});const js=await res.json();answer.textContent=js.choices?.[0]?.message?.content||JSON.stringify(js,null,2)}catch(e){answer.textContent="Error: "+e.message}}
+async function generateCityRow(){const key=document.getElementById("openaiKey").value||localStorage.getItem("openaiKey");const city=document.getElementById("newCityName").value.trim();if(!city){alert("Enter a city.");return}if(!key){document.getElementById("generatedRow").value="No API key. Add manually using the CSV headers. City: "+city;return}const prompt=`Create a JSON object for city "${city}" for a family Europe trip from Istanbul, Oct 29-Nov 1. Use these exact keys: ${REQUIRED_COLUMNS.join(", ")}. Keep values concise. image_url may be blank if unsure. Do not invent live flight prices; estimate as text.`;const out=document.getElementById("generatedRow");out.value="Generating…";try{const res=await fetch("https://api.openai.com/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},body:JSON.stringify({model:document.getElementById("modelName").value||"gpt-4.1-mini",messages:[{role:"system",content:"Return only valid JSON."},{role:"user",content:prompt}],temperature:.2})});const js=await res.json();const txt=js.choices?.[0]?.message?.content||"{}";generatedObject=JSON.parse(txt.replace(/^```json|```$/g,"").trim());out.value=JSON.stringify(generatedObject,null,2)}catch(e){out.value="Error: "+e.message}}
+async function appendGeneratedRow(){const url=document.getElementById("appendUrl").value||localStorage.getItem("appendUrl");if(!url){alert("No Apps Script append URL. Copy the generated JSON manually to your sheet.");return}if(!generatedObject){try{generatedObject=JSON.parse(document.getElementById("generatedRow").value)}catch(e){alert("No valid generated JSON.");return}}try{const res=await fetch(url,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify(generatedObject)});alert("Append request sent. Reload sheet after a few seconds.")}catch(e){alert("Append failed: "+e.message)}}
+["search","beachFilter","scoreFilter","sortBy"].forEach(id=>document.getElementById(id).addEventListener("input",renderAll));
+document.getElementById("sheetUrl").value=localStorage.getItem("tripPickerSheetUrl")||"";document.getElementById("openaiKey").value=localStorage.getItem("openaiKey")||"";document.getElementById("appendUrl").value=localStorage.getItem("appendUrl")||"";
 loadData();
 </script>
 </body>
